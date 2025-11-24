@@ -62,6 +62,9 @@
       margin-bottom: 1.5rem;
     }
 
+    /* إخفاء الجدول في البداية */
+    #dataTable { display:none; }
+
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -180,8 +183,45 @@
 </header>
 
 <div class="container">
+
   <div class="stats" id="totalRent">جاري الحساب...</div>
 
+  <!-- 🔍 صندوق التصفيات -->
+  <div class="filters-box" style="
+    background:white;padding:1.5rem;border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);margin-bottom:1.5rem;
+  ">
+    <h3 style="margin-bottom:1rem;text-align:center;font-weight:900;color:#1e40af;">
+      🔎 تصفية البيانات قبل العرض
+    </h3>
+
+    <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
+
+      <select id="filterNahya" style="padding:.8rem;border-radius:8px;border:2px solid #ddd;">
+        <option value="">اختر الناحية</option>
+      </select>
+
+      <select id="filterType" style="padding:.8rem;border-radius:8px;border:2px solid #ddd;">
+        <option value="">اختر النوع</option>
+      </select>
+
+      <select id="filterWaqf" style="padding:.8rem;border-radius:8px;border:2px solid #ddd;">
+        <option value="">اختر الوقف</option>
+      </select>
+
+      <select id="filterHod" style="padding:.8rem;border-radius:8px;border:2px solid #ddd;">
+        <option value="">اختر الحوض</option>
+      </select>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem;">
+      <button onclick="applyFilters()" style="background:#1e40af;color:white;padding:.8rem 2rem;border-radius:8px;">
+        عرض النتائج
+      </button>
+    </div>
+  </div>
+
+  <!-- أدوات التحكم -->
   <div class="controls">
     <input type="text" id="search" placeholder="🔍 بحث ذكي في جميع الحقول..." />
     <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> إضافة مستأجر</button>
@@ -190,7 +230,7 @@
     <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
   </div>
 
-  <table>
+  <table id="dataTable">
     <thead>
       <tr>
         <th>م</th><th>الناحية</th><th>النوع</th><th>الوقف</th><th>الصفحة</th>
@@ -314,8 +354,63 @@ function initApp() {
     threshold: 0.3
   });
 
-  renderTable(data);
+  fillFilters();
   calcTotal();
+}
+
+/* =============================== */
+/*   ملء فلاتر التصنيف            */
+/* =============================== */
+
+function fillFilters() {
+  const nahya = new Set();
+  const type = new Set();
+  const waqf = new Set();
+  const hod = new Set();
+
+  data.forEach(r => {
+    if (r[1]) nahya.add(r[1]);
+    if (r[2]) type.add(r[2]);
+    if (r[3]) waqf.add(r[3]);
+    if (r[6]) hod.add(r[6]);
+  });
+
+  fillSelect("filterNahya", nahya);
+  fillSelect("filterType", type);
+  fillSelect("filterWaqf", waqf);
+  fillSelect("filterHod", hod);
+}
+
+function fillSelect(id, setValues) {
+  const select = document.getElementById(id);
+  setValues.forEach(v => {
+    const op = document.createElement("option");
+    op.value = v;
+    op.textContent = v;
+    select.appendChild(op);
+  });
+}
+
+/* =============================== */
+/*   تطبيق التصفية                 */
+/* =============================== */
+
+function applyFilters() {
+  const f1 = filterNahya.value;
+  const f2 = filterType.value;
+  const f3 = filterWaqf.value;
+  const f4 = filterHod.value;
+
+  let filtered = data;
+
+  if (f1) filtered = filtered.filter(r => r[1] === f1);
+  if (f2) filtered = filtered.filter(r => r[2] === f2);
+  if (f3) filtered = filtered.filter(r => r[3] === f3);
+  if (f4) filtered = filtered.filter(r => r[6] === f4);
+
+  renderTable(filtered);
+
+  document.getElementById("dataTable").style.display = "table";
 }
 
 /* =============================== */
@@ -338,14 +433,12 @@ function renderTable(records) {
       tr.appendChild(td);
     }
 
-    /* الأجرة السنوية */
     const annual = ((parseFloat(row[9]) || 0) * 12).toFixed(2);
     const tdAnnual = document.createElement("td");
     tdAnnual.textContent = annual;
     tdAnnual.className = "rent";
     tr.appendChild(tdAnnual);
 
-    /* إجراءات */
     const tdAct = document.createElement("td");
     tdAct.innerHTML = `
       <button onclick="editRow(${idx})" style="background:#3b82f6;color:white;"><i class="fas fa-edit"></i></button>
@@ -372,9 +465,12 @@ function calcTotal() {
 
 search.oninput = () => {
   const t = search.value.trim();
-  if (!t) return renderTable(data);
+  if (!t) return;
+
   const results = fuse.search(t).map(r => r.item);
   renderTable(results);
+
+  document.getElementById("dataTable").style.display = "table";
 };
 
 /* =============================== */
@@ -409,6 +505,7 @@ dataForm.onsubmit = e => {
 
   saveData();
   renderTable(data);
+  document.getElementById("dataTable").style.display = "table";
   closeModal();
 };
 
@@ -454,5 +551,6 @@ function exportToExcel() {
 loadFromGitHub();
 window.onclick = e => { if (e.target === modal) closeModal(); };
 </script>
+
 </body>
 </html>
