@@ -1,1 +1,391 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة وقف الإسكان - الإصدار 2025</title>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root{--main:#0f3460;--accent:#1e56a0;--success:#27ae60;--warning:#f39c12;--danger:#e74c3c;--gold:#f1c40f;--light:#f8f9fa}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#e8f5e8,#c8e6c9);min-height:100vh;padding:15px 10px;color:#333}
+        .container{max-width:1700px;margin:0 auto;background:white;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.15);overflow:hidden}
+        header{background:linear-gradient(120deg,#1e40af,#16a085);color:white;padding:40px 20px;text-align:center}
+        h1{font-size:2.6rem;margin-bottom:8px;font-weight:900}
+        .subtitle{font-size:1.3rem;opacity:.95}
+        .loading{text-align:center;padding:100px;font-size:1.8rem;color:#27ae60}
+        .loading i{font-size:4rem;margin-bottom:20px;animation:spin 2s linear infinite}
+        @keyframes spin{100%{transform:rotate(360deg)}}
+        .actions{padding:25px;background:#f8fafc;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;border-bottom:2px solid #ddd}
+        .btn{padding:16px 36px;border:none;border-radius:14px;font-weight:bold;cursor:pointer;font-size:1.1rem;color:white;box-shadow:0 6px 20px rgba(0,0,0,.2);transition:.3s;display:inline-flex;align-items:center;gap:8px}
+        .btn-primary{background:var(--accent)}
+        .btn-success{background:var(--success)}
+        .btn-warning{background:var(--warning);color:#000}
+        .btn-danger{background:var(--danger)}
+        .btn-gold{background:var(--gold);color:#000}
+        .btn:hover{transform:translateY(-5px);box-shadow:0 15px 35px rgba(0,0,0,.3)}
+        .controls{padding:25px;background:white;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;border-bottom:3px solid var(--success)}
+        .search-box{position:relative}
+        #globalSearch{width:100%;padding:18px 60px 18px 20px;border:2px solid #ddd;border-radius:14px;font-size:1.15rem}
+        #globalSearch:focus{border-color:var(--success);box-shadow:0 0 0 8px rgba(39,174,96,.15);outline:none}
+        .search-icon{position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--success);font-size:1.6rem}
+        select{padding:18px;border:2px solid #ddd;border-radius:14px;font-size:1.1rem;width:100%}
+        .stats{padding:20px;background:#ecfdf5;color:var(--success);font-weight:bold;font-size:1.4rem;text-align:center}
+        .stats strong{color:#1e40af;font-size:1.6rem}
+        .table-container{overflow-x:auto;padding:20px}
+        table{width:100%;border-collapse:separate;border-spacing:0 10px;font-size:1rem}
+        th{background:var(--success);color:white;padding:18px 12px;text-align:center;position:sticky;top:0;z-index:10}
+        td{padding:16px 12px;text-align:center;background:#f8fff8;border-bottom:1px solid #ddd}
+        tr:hover td{background:#e8f5e8}
+        .money{font-weight:900;color:var(--success)}
+        .card-view{display:none;padding:20px}
+        .card{background:white;border-radius:16px;padding:25px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,.12);border-right:6px solid var(--success)}
+        .card h3{background:var(--success);color:white;padding:16px;border-radius:12px;margin:-25px -25px 20px -25px;font-size:1.5rem}
+        .card p{margin:12px 0;font-size:1.05rem}
+        .card span{font-weight:bold;color:var(--main)}
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+        .modal-content{background:white;border-radius:20px;width:95%;max-width:800px;max-height:90vh;overflow-y:auto}
+        .modal-header{background:var(--success);color:white;padding:25px;text-align:center;font-size:1.6rem;border-radius:18px 18px 0 0}
+        .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:bold}
+        .form-group input,select{padding:14px;border:2px solid #ddd;border-radius:10px;width:100%;font-size:1.1rem}
+        .close{position:absolute;left:20px;top:20px;font-size:30px;cursor:pointer;color:white}
+        .total-calc{background:#fff8e1;padding:15px;border-radius:10px;margin:15px 0;text-align:center;font-weight:bold;color:var(--warning)}
+        @media(max-width:992px){.table-container{display:none}.card-view{display:block}}
+        @media(max-width:480px){.actions{flex-direction:column}.btn{width:100%;justify-content:center}.controls{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>وقف الإسكان</h1>
+            <p class="subtitle">نظام إدارة الإيجارات والعقارات - الإصدار المالي 2025</p>
+        </header>
 
+        <div class="loading" id="loading">
+            <i class="fas fa-home"></i><br><br>
+            جاري تحميل بيانات وقف الإسكان...
+        </div>
+
+        <div id="app" style="display:none;">
+            <div class="actions">
+                <button class="btn btn-success" onclick="addNewRecord()">
+                    <i class="fas fa-plus-circle"></i> إضافة عقار جديد
+                </button>
+                <button class="btn btn-gold" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> تصدير إكسل
+                </button>
+                <button class="btn btn-primary" onclick="importFromCSV()">
+                    <i class="fas fa-cloud-download-alt"></i> تحديث من المصدر
+                </button>
+                <button class="btn btn-warning" onclick="window.print()">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+            </div>
+
+            <div class="controls">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="globalSearch" placeholder="ابحث بالاسم • الجريدة • الحوض • الأجرة...">
+                </div>
+                <select id="filterArea"><option value="">كل النواحي</option></select>
+                <select id="filterType"><option value="">كل الأنواع</option></select>
+                <select id="filterBasin"><option value="">كل الأحواض</option></select>
+            </div>
+
+            <div class="stats">
+                تم العثور على <strong><span id="resultCount">0</span></strong> عقار • 
+                إجمالي الأجرة السنوية: <strong><span id="totalYearly">0</span> جنيه</strong>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th><th>لناحية</th><th>النوع</th><th>الوقف</th><th>الصفحة</th><th>الجريدة</th>
+                            <th>الحوض</th><th>اسم المستأجر</th><th>المساحة م²</th>
+                            <th>شهرية</th><th>متأخرات</th><th>سنوية</th><th>المتر×12</th><th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="card-view" id="cardView"></div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">إضافة عقار جديد</div>
+            <span class="close" onclick="closeModal()">×</span>
+            <div class="modal-body" style="padding:30px">
+                <form id="recordForm">
+                    <div class="form-row">
+                        <div class="form-group"><label>لناحية</label><input type="text" id="area" required></div>
+                        <div class="form-group"><label>النوع</label><input type="text" id="type" required></div>
+                        <div class="form-group"><label>الوقف</label><input type="text" id="waqf" value="فاطمة هانم"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>الصفحة</label><input type="text" id="page"></div>
+                        <div class="form-group"><label>الجريدة</label><input type="text" id="journal"></div>
+                        <div class="form-group"><label>الحوض</label><input type="text" id="basin"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>اسم المستأجر</label><input type="text" id="holder" required></div>
+                        <div class="form-group"><label>المساحة (م²)</label><input type="number" step="0.01" id="areaSize" required></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>الأجرة الشهرية</label><input type="number" step="0.01" id="monthlyRent" required oninput="updateCalcs()"></div>
+                        <div class="form-group"><label>متأخرات</label><input type="number" step="0.01" id="arrears" value="0" oninput="updateCalcs()"></div>
+                    </div>
+                    <div class="total-calc">
+                        الأجرة السنوية: <span id="yearlyCalc">0</span> جنيه<br>
+                        سعر المتر ×12: <span id="perMeterCalc">0</span> جنيه/م²
+                    </div>
+                    <input type="hidden" id="editIndex" value="-1">
+                    <div style="text-align:center;margin-top:30px">
+                        <button type="button" class="btn btn-success" onclick="saveRecord()">حفظ</button>
+                        <button type="button" class="btn btn-danger" onclick="closeModal()">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CSV_URL = "https://raw.githubusercontent.com/abukora/waqf-eskan/main/eskan.csv";
+        let data = JSON.parse(localStorage.getItem('waqfEskanV2')) || [];
+        let fuse;
+
+        function calcYearly(r) { return (parseFloat(r.monthlyRent)||0) * 12; }
+        function calcPerMeter(r) { const y = calcYearly(r); return r.areaSize > 0 ? (y / parseFloat(r.areaSize)).toFixed(4) : 0; }
+
+        function updateCalcs() {
+            const monthly = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const area = parseFloat(document.getElementById('areaSize').value) || 0;
+            document.getElementById('yearlyCalc').textContent = (monthly * 12).toFixed(2);
+            document.getElementById('perMeterCalc').textContent = area > 0 ? ((monthly * 12 / area).toFixed(4)) : 0;
+        }
+
+        function saveData() { localStorage.setItem('waqfEskanV2', JSON.stringify(data)); }
+
+        function exportToExcel() {
+            const filtered = getCurrentResults();
+            const exportData = filtered.map(r => ({
+                "لناحية": r.area, "النوع": r.type, "الوقف": r.waqf, "الصفحة": r.page, "الجريدة": r.journal,
+                "الحوض": r.basin, "اسم المستأجر": r.holder, "المساحة": r.areaSize,
+                "الأجرة الشهرية": r.monthlyRent, "متأخرات": r.arrears,
+                "الأجرة السنوية": calcYearly(r).toFixed(2), "المتر*12": calcPerMeter(r)
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "وقف الإسكان");
+            XLSX.writeFile(wb, "وقف_الإسكان_" + new Date().toISOString().slice(0,10) + ".xlsx");
+        }
+
+        function importFromCSV() {
+            if(!confirm("تحديث من GitHub؟ سيتم دمج البيانات الجديدة.")) return;
+            Papa.parse(CSV_URL, {
+                download: true, header: true, skipEmptyLines: true, encoding: "UTF-8",
+                complete: res => {
+                    if (res.data.length === 0 || res.errors.length > 0) {
+                        alert("الملف فارغ أو خطأ في التحميل. استخدم البيانات التجريبية أو أضف يدويًا.");
+                        return;
+                    }
+                    const newData = res.data.map(r => ({
+                        area: String(r["لناحية"]||"").trim(),
+                        type: String(r["النوع"]||"").trim(),
+                        waqf: String(r["الوقف"]||"فاطمة هانم").trim(),
+                        page: String(r["الصفحة"]||"").trim(),
+                        journal: String(r["الجريدة"]||"").trim(),
+                        basin: String(r["الحوض"]||"").trim(),
+                        holder: String(r["اسم المستأجر"]||"").trim(),
+                        areaSize: parseFloat(r["المساحة"]||0),
+                        monthlyRent: parseFloat(r["الأجرة الشهرية"]||0),
+                        arrears: parseFloat(r["متأخرات"]||0)
+                    })).filter(r => r.holder);
+                    data = [...data.filter(d => !newData.some(n => n.holder === d.holder && n.journal === d.journal)), ...newData];
+                    saveData(); populateFilters(); renderResults(getCurrentResults());
+                    alert("تم التحديث! عدد السجلات: " + data.length);
+                },
+                error: () => alert("فشل التحميل. استخدم الزر للإضافة اليدوية.")
+            });
+        }
+
+        function getCurrentResults() {
+            let results = [...data];
+            const q = document.getElementById('globalSearch').value.trim();
+            if (q) { if (!fuse) fuse = new Fuse(data, {keys: Object.keys(data[0]||{}), threshold: 0.35}); results = fuse.search(q).map(x => x.item); }
+            const a = document.getElementById('filterArea').value; if (a) results = results.filter(x => x.area === a);
+            const t = document.getElementById('filterType').value; if (t) results = results.filter(x => x.type === t);
+            const b = document.getElementById('filterBasin').value; if (b) results = results.filter(x => x.basin === b);
+            return results;
+        }
+
+        function renderResults(items) {
+            document.getElementById('resultCount').textContent = items.length;
+            document.getElementById('totalYearly').textContent = items.reduce((s,r) => s + calcYearly(r), 0).toFixed(0);
+            const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
+            const cards = document.getElementById('cardView'); cards.innerHTML = '';
+            if (items.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="14" style="padding:80px;color:#999">لا توجد نتائج. أضف عقارًا جديدًا!</td></tr>`; 
+                return; 
+            }
+            items.forEach((item, i) => {
+                const yearly = calcYearly(item).toFixed(2);
+                const perMeter = calcPerMeter(item);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i+1}</td>
+                    <td>${item.area}</td>
+                    <td>${item.type}</td>
+                    <td>${item.waqf}</td>
+                    <td>${item.page}</td>
+                    <td>${item.journal}</td>
+                    <td>${item.basin}</td>
+                    <td><strong>${item.holder}</strong></td>
+                    <td>${item.areaSize}</td>
+                    <td class="money">${item.monthlyRent}</td>
+                    <td>${item.arrears}</td>
+                    <td class="money">${yearly}</td>
+                    <td>${perMeter}</td>
+                    <td>
+                        <button class="btn btn-warning" style="padding:6px 12px;font-size:0.9rem" onclick="editRecord(${data.indexOf(item)})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger" style="padding:6px 12px;font-size:0.9rem" onclick="deleteRecord(${data.indexOf(item)})"><i class="fas fa-trash"></i></button>
+                    </td>`;
+                tbody.appendChild(tr);
+
+                const card = document.createElement('div'); card.className = 'card';
+                card.innerHTML = `
+                    <h3>الجريدة ${item.journal} - ${item.holder}</h3>
+                    <p><span>الناحية:</span> ${item.area} | <span>النوع:</span> ${item.type}</p>
+                    <p><span>الحوض:</span> ${item.basin} | <span>الصفحة:</span> ${item.page}</p>
+                    <p><span>المساحة:</span> ${item.areaSize} م²</p>
+                    <p><span>الأجرة الشهرية:</span> ${item.monthlyRent} جنيه | <span>متأخرات:</span> ${item.arrears} جنيه</p>
+                    <p class="total-calc"><strong>الأجرة السنوية: ${yearly} جنيه</strong> | <strong>سعر المتر ×12: ${perMeter} جنيه/م²</strong></p>
+                    <div style="text-align:center;margin-top:15px">
+                        <button class="btn btn-warning" onclick="editRecord(${data.indexOf(item)})">تعديل</button>
+                        <button class="btn btn-danger" onclick="deleteRecord(${data.indexOf(item)})">حذف</button>
+                    </div>`;
+                cards.appendChild(card);
+            });
+        }
+
+        function populateFilters() {
+            const areas = [...new Set(data.map(x => x.area))].filter(Boolean).sort();
+            const types = [...new Set(data.map(x => x.type))].filter(Boolean).sort();
+            const basins = [...new Set(data.map(x => x.basin))].filter(Boolean).sort();
+            document.getElementById('filterArea').innerHTML = '<option value="">كل النواحي</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('');
+            document.getElementById('filterType').innerHTML = '<option value="">كل الأنواع</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+            document.getElementById('filterBasin').innerHTML = '<option value="">كل الأحواض</option>' + basins.map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+
+        function addNewRecord() { 
+            document.getElementById('modalTitle').textContent = 'إضافة عقار جديد'; 
+            document.getElementById('recordForm').reset(); 
+            document.getElementById('waqf').value = 'فاطمة هانم'; 
+            document.getElementById('editIndex').value = '-1'; 
+            updateCalcs(); 
+            document.getElementById('modal').style.display = 'flex'; 
+        }
+
+        function editRecord(i) { 
+            const r = data[i]; 
+            ['area','type','waqf','page','journal','basin','holder','areaSize','monthlyRent','arrears'].forEach(f => document.getElementById(f).value = r[f] || ''); 
+            document.getElementById('editIndex').value = i; 
+            document.getElementById('modalTitle').textContent = 'تعديل العقار'; 
+            updateCalcs(); 
+            document.getElementById('modal').style.display = 'flex'; 
+        }
+
+        function saveRecord() {
+            const idx = parseInt(document.getElementById('editIndex').value);
+            const rec = {
+                area: document.getElementById('area').value.trim(),
+                type: document.getElementById('type').value.trim(),
+                waqf: document.getElementById('waqf').value.trim(),
+                page: document.getElementById('page').value.trim(),
+                journal: document.getElementById('journal').value.trim(),
+                basin: document.getElementById('basin').value.trim(),
+                holder: document.getElementById('holder').value.trim(),
+                areaSize: parseFloat(document.getElementById('areaSize').value)||0,
+                monthlyRent: parseFloat(document.getElementById('monthlyRent').value)||0,
+                arrears: parseFloat(document.getElementById('arrears').value)||0
+            };
+            if (!rec.holder || !rec.areaSize || !rec.monthlyRent) return alert("يرجى ملء الحقول الأساسية");
+            if (idx === -1) data.push(rec); else data[idx] = rec;
+            saveData(); populateFilters(); renderResults(getCurrentResults()); closeModal();
+        }
+
+        function deleteRecord(i) { if(confirm("حذف نهائي؟")) { data.splice(i,1); saveData(); populateFilters(); renderResults(getCurrentResults()); } }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        // أحداث
+        document.getElementById('globalSearch').addEventListener('input', () => setTimeout(() => renderResults(getCurrentResults()), 300));
+        document.getElementById('filterArea').addEventListener('change', () => renderResults(getCurrentResults()));
+        document.getElementById('filterType').addEventListener('change', () => renderResults(getCurrentResults()));
+        document.getElementById('filterBasin').addEventListener('change', () => renderResults(getCurrentResults()));
+
+        // تحميل أولي مع بيانات تجريبية
+        if (data.length === 0) {
+            // محاولة تحميل من CSV
+            Papa.parse(CSV_URL, {download:true, header:true, skipEmptyLines:true, encoding:"UTF-8", 
+                complete: res => {
+                    if (res.data.length > 1 && res.data.some(row => row["اسم المستأجر"])) { // إذا كان هناك بيانات حقيقية
+                        data = res.data.map(r => ({
+                            area: String(r["لناحية"]||"").trim(),
+                            type: String(r["النوع"]||"").trim(),
+                            waqf: String(r["الوقف"]||"فاطمة هانم").trim(),
+                            page: String(r["الصفحة"]||"").trim(),
+                            journal: String(r["الجريدة"]||"").trim(),
+                            basin: String(r["الحوض"]||"").trim(),
+                            holder: String(r["اسم المستأجر"]||"").trim(),
+                            areaSize: parseFloat(r["المساحة"]||0),
+                            monthlyRent: parseFloat(r["الأجرة الشهرية"]||0),
+                            arrears: parseFloat(r["متأخرات"]||0)
+                        })).filter(r => r.holder);
+                    } else {
+                        // بيانات تجريبية إذا كان الملف فارغًا
+                        data = [
+                            {area:"البقلية", type:"فضاء", waqf:"فاطمة هانم", page:"1", journal:"1", basin:"الحكر القديم", holder:"و/ سندس محمد كشك", areaSize:456.64, monthlyRent:45.7, arrears:0},
+                            {area:"البقلية", type:"شقة", waqf:"فاطمة هانم", page:"2", journal:"2", basin:"الحكر الجديد", holder:"أحمد علي", areaSize:120.5, monthlyRent:150, arrears:300},
+                            {area:"الإسكان", type:"محل", waqf:"فاطمة هانم", page:"3", journal:"3", basin:"المركزي", holder:"فاطمة أحمد", areaSize:80.2, monthlyRent:200, arrears:0},
+                            {area:"البقلية", type:"فضاء", waqf:"فاطمة هانم", page:"4", journal:"4", basin:"الحكر القديم", holder:"محمد حسن", areaSize:300, monthlyRent:30, arrears:100},
+                            {area:"الإسكان", type:"شقة", waqf:"فاطمة هانم", page:"5", journal:"5", basin:"الفرعي", holder:"زينب محمد", areaSize:200, monthlyRent:100, arrears:0}
+                        ];
+                    }
+                    saveData();
+                    initApp();
+                },
+                error: () => {
+                    // بيانات تجريبية في حالة خطأ
+                    data = [
+                        {area:"البقلية", type:"فضاء", waqf:"فاطمة هانم", page:"1", journal:"1", basin:"الحكر القديم", holder:"و/ سندس محمد كشك", areaSize:456.64, monthlyRent:45.7, arrears:0},
+                        {area:"البقلية", type:"شقة", waqf:"فاطمة هانم", page:"2", journal:"2", basin:"الحكر الجديد", holder:"أحمد علي", areaSize:120.5, monthlyRent:150, arrears:300},
+                        {area:"الإسكان", type:"محل", waqf:"فاطمة هانم", page:"3", journal:"3", basin:"المركزي", holder:"فاطمة أحمد", areaSize:80.2, monthlyRent:200, arrears:0},
+                        {area:"البقلية", type:"فضاء", waqf:"فاطمة هانم", page:"4", journal:"4", basin:"الحكر القديم", holder:"محمد حسن", areaSize:300, monthlyRent:30, arrears:100},
+                        {area:"الإسكان", type:"شقة", waqf:"فاطمة هانم", page:"5", journal:"5", basin:"الفرعي", holder:"زينب محمد", areaSize:200, monthlyRent:100, arrears:0}
+                    ];
+                    saveData();
+                    initApp();
+                }
+            });
+        } else {
+            initApp();
+        }
+
+        function initApp() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            populateFilters();
+            renderResults(data);
+        }
+
+        window.onclick = e => { if (e.target.id === 'modal') closeModal(); };
+    </script>
+</body>
+</html>
