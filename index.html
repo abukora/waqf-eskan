@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>نظام إدارة إيجارات وقف فاطمة هانم البقلية - 2025</title>
 
-  <!-- Google Fonts - Cairo -->
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"/>
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-  <!-- Fuse.js for fuzzy search -->
+  <!-- Fuse.js -->
   <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
 
-  <!-- PapaParse for CSV -->
+  <!-- PapaParse -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-  <!-- SheetJS for Excel export -->
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -29,6 +29,7 @@
       --danger: #dc2626;
       --dark: #1e293b;
     }
+
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family: 'Cairo', sans-serif;
@@ -36,6 +37,7 @@
       min-height: 100vh;
       color: #1f2937;
     }
+
     header {
       background: linear-gradient(to right, #1e3a8a, #3b82f6);
       color: white;
@@ -43,8 +45,8 @@
       text-align: center;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
+
     header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    header p { font-size: 1.1rem; opacity: 0.9; }
 
     .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
 
@@ -67,6 +69,7 @@
       margin-bottom: 1.5rem;
       justify-content: center;
     }
+
     input[type="text"] {
       padding: 0.8rem 1rem;
       border: 2px solid #ddd;
@@ -75,22 +78,23 @@
       width: 100%;
       max-width: 400px;
     }
+
     button {
       padding: 0.8rem 1.5rem;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: 0.3s;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
     }
+
     .btn-add { background:#16a34a; color:white; }
     .btn-refresh { background:#ca8a04; color:white; }
     .btn-export { background:#3b82f6; color:white; }
     .btn-print { background:#6b7280; color:white; }
-    button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
     table {
       width: 100%;
@@ -100,35 +104,38 @@
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
+
     th, td {
       padding: 1rem;
       text-align: center;
       border-bottom: 1px solid #eee;
     }
+
     th {
       background: var(--primary);
       color: white;
       font-weight: 700;
     }
+
     tr:hover { background:#f8fafc; }
+
     .rent { color: var(--success); font-weight: bold; }
     .arrears { color: var(--danger); font-weight: bold; }
 
-    .cards { display: none; }
+    /* Mobile */
     @media (max-width: 768px) {
       table, thead, tbody, th, td, tr { display: block; }
       thead tr { position: absolute; top: -9999px; left: -9999px; }
-      tr { border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background: white; padding: 1rem; }
+      tr { border: 1px solid #ccc; margin-bottom: 1rem; border-radius: 10px; padding: 1rem; }
       td { border: none; position: relative; padding-left: 50%; text-align: right; }
       td:before { content: attr(data-label); position: absolute; left: 1rem; width: 45%; font-weight: bold; text-align: right; }
-      .controls { flex-direction: column; align-items: stretch; }
-      input[type="text"] { max-width: 100%; }
     }
 
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background: rgba(0,0,0,0.7);
       align-items: center;
       justify-content: center;
@@ -140,27 +147,12 @@
       border-radius: 12px;
       width: 90%;
       max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
     }
     .close { float: left; font-size: 2rem; cursor: pointer; }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    input, select {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-
     #loading {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background: rgba(30,58,138,0.95);
       color: white;
       display: flex;
@@ -170,7 +162,8 @@
       font-size: 1.5rem;
       z-index: 9999;
     }
-    .coin { font-size: 5rem; animation: spin 2s linear infinite; margin-bottom: 1rem; }
+
+    .coin { font-size: 5rem; animation: spin 2s linear infinite; }
     @keyframes spin { from {transform:rotate(0deg);} to {transform:rotate(360deg);} }
   </style>
 </head>
@@ -178,12 +171,12 @@
 
 <div id="loading">
   <i class="fas fa-coins coin"></i>
-  <div>جاري تحميل بيانات وقف فاطمة هانم البقلية...</div>
+  <div>جاري تحميل بيانات الوقف...</div>
 </div>
 
 <header>
   <h1>وقف فاطمة هانم البقلية</h1>
-  <p>نظام إدارة الإيجارات - الإصدار المالي الكامل 2025</p>
+  <p>نظام إدارة الإيجارات - الإصدار المالي 2025</p>
 </header>
 
 <div class="container">
@@ -192,27 +185,18 @@
   <div class="controls">
     <input type="text" id="search" placeholder="🔍 بحث ذكي في جميع الحقول..." />
     <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> إضافة مستأجر</button>
-    <button class="btn-refresh" onclick="loadFromGitHub(true)"><i class="fas fa-sync"></i> تحديث من المصدر</button>
-    <button class="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> تصدير إكسل</button>
+    <button class="btn-refresh" onclick="loadFromGitHub(true)"><i class="fas fa-sync"></i> تحديث</button>
+    <button class="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> تصدير</button>
     <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
   </div>
 
-  <table id="dataTable">
+  <table>
     <thead>
       <tr>
-        <th>م</th>
-        <th>الناحية</th>
-        <th>النوع</th>
-        <th>الوقف</th>
-        <th>الصفحة</th>
-        <th>الجريدة</th>
-        <th>الحوض</th>
-        <th>اسم المستأجر</th>
-        <th>المساحة</th>
-        <th class="rent">الأجرة الشهرية</th>
-        <th class="arrears">متأخرات</th>
-        <th class="rent">الأجرة السنوية</th>
-        <th>إجراءات</th>
+        <th>م</th><th>الناحية</th><th>النوع</th><th>الوقف</th><th>الصفحة</th>
+        <th>الجريدة</th><th>الحوض</th><th>المستأجر</th><th>المساحة</th>
+        <th class="rent">أجرة شهرية</th><th class="arrears">متأخرات</th>
+        <th class="rent">أجرة سنوية</th><th>إجراءات</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -223,60 +207,58 @@
 <div class="modal" id="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
-    <h2 id="modalTitle">إضافة مستأجر جديد</h2>
+    <h2 id="modalTitle">إضافة مستأجر</h2>
+
     <form id="dataForm">
       <input type="hidden" id="editIndex" />
+
       <div class="form-grid">
-        <input type="text" id="col1" placeholder="م" required />
-        <input type="text" id="col2" placeholder="الناحية" required />
-        <input type="text" id="col3" placeholder="النوع" required />
-        <input type="text" id="col4" placeholder="الوقف" required />
-        <input type="text" id="col5" placeholder="الصفحة" />
-        <input type="text" id="col6" placeholder="الجريدة" />
-        <input type="text" id="col7" placeholder="الحوض" />
-        <input type="text" id="col8" placeholder="اسم المستأجر" required />
-        <input type="text" id="col9" placeholder="المساحة" />
-        <input type="number" id="col10" placeholder="الأجرة الشهرية" step="0.01" required oninput="calcAnnual()" />
-        <input type="number" id="col11" placeholder="متأخرات" step="0.01" value="0" />
+        <input id="col1" placeholder="م" required>
+        <input id="col2" placeholder="الناحية" required>
+        <input id="col3" placeholder="النوع" required>
+        <input id="col4" placeholder="الوقف" required>
+        <input id="col5" placeholder="الصفحة">
+        <input id="col6" placeholder="الجريدة">
+        <input id="col7" placeholder="الحوض">
+        <input id="col8" placeholder="اسم المستأجر" required>
+        <input id="col9" placeholder="المساحة">
+        <input type="number" id="col10" placeholder="الأجرة الشهرية" step="0.01" required>
+        <input type="number" id="col11" placeholder="متأخرات" step="0.01" value="0">
       </div>
-      <div style="margin-top:1.5rem;text-align:center;">
-        <button type="submit" style="background:#16a34a;color:white;padding:1rem 2rem;font-size:1.1rem;">
+
+      <div style="text-align:center;margin-top:1rem;">
+        <button style="background:#16a34a;color:white;padding:1rem 2rem;">
           <i class="fas fa-save"></i> حفظ
         </button>
       </div>
+
     </form>
   </div>
 </div>
 
 <script>
+/* =============================== */
+/*   المتغيرات الأساسية            */
+/* =============================== */
+
 const CSV_URL = "https://raw.githubusercontent.com/abukora/waqf-eskan/main/eskan.csv";
 let data = [];
 let fuse;
 
-const columns = [
-  "م", "الناحية", "النوع", "الوقف", "الصفحة", "الجريدة", "الحوض",
-  "اسم المستأجر", "المساحة", "الأجرة الشهرية", "متأخرات", "الأجرة السنوية"
+const COLUMNS = [
+  "م","الناحية","النوع","الوقف","الصفحة","الجريدة","الحوض",
+  "اسم المستأجر","المساحة","الأجرة الشهرية","متأخرات","الأجرة السنوية"
 ];
 
-function calcAnnual() {
-  const monthly = parseFloat(document.getElementById("col10").value) || 0;
-  document.getElementById("col11").nextElementSibling?.remove();
-  const annual = (monthly * 12).toFixed(2);
-  if (document.getElementById("col10").value) {
-    document.getElementById("col10").parentNode.appendChild(
-      Object.assign(document.createElement("small"), {
-        textContent: `السنوية: ${annual} جنيه`,
-        style: "color:green;font-weight:bold;display:block;margin-top:5px;"
-      })
-    );
-  }
-}
+/* =============================== */
+/*   تحميل البيانات                */
+/* =============================== */
 
 async function loadFromGitHub(force = false) {
   const saved = localStorage.getItem("waqfData");
   const savedTime = localStorage.getItem("waqfTime");
 
-  if (!force && saved && savedTime && (Date.now() - savedTime < 24*60*60*1000)) {
+  if (!force && saved && savedTime && Date.now() - savedTime < 86400000) {
     data = JSON.parse(saved);
     initApp();
     document.getElementById("loading").style.display = "none";
@@ -284,169 +266,193 @@ async function loadFromGitHub(force = false) {
   }
 
   try {
-    const response = await fetch(CSV_URL + "?t=" + Date.now());
-    const text = await response.text();
+    const res = await fetch(CSV_URL + "?t=" + Date.now());
+    const text = await res.text();
+
     Papa.parse(text, {
-      complete: (results) => {
-        data = results.data.slice(1).filter(row => row.length > 5 && row[0]);
- results.data[0]);
-        if (saved) {
-          const local = JSON.parse(saved);
-          data = mergeData(local, data);
-        }
-        saveAndInit();
-      },
-      error: () => {
-        if (saved) { data = JSON.parse(saved); initApp(); }
+      complete: ({ data: rows }) => {
+        const remote = rows.slice(1).filter(r => r[0]);
+        data = saved ? mergeData(JSON.parse(saved), remote) : remote;
+        saveData();
+        initApp();
       }
     });
+
   } catch {
-    if (saved) { data = JSON.parse(saved); initApp(); }
+    if (saved) {
+      data = JSON.parse(saved);
+      initApp();
+    }
   }
+
   document.getElementById("loading").style.display = "none";
 }
 
+/* دمج البيانات */
 function mergeData(local, remote) {
   const map = new Map();
-  local.forEach(r => map.set(r[0]+"|"+r[7], r));
+  local.forEach(r => map.set(r[0] + "|" + r[7], r));
   remote.forEach(r => {
-    const key = r[0]+"|"+r[7];
+    const key = r[0] + "|" + r[7];
     if (!map.has(key)) map.set(key, r);
   });
-  return Array.from(map.values());
+  return [...map.values()];
 }
 
-function saveAndInit() {
+function saveData() {
   localStorage.setItem("waqfData", JSON.stringify(data));
   localStorage.setItem("waqfTime", Date.now());
-  initApp();
 }
+
+/* =============================== */
+/*   التشغيل الأساسي               */
+/* =============================== */
 
 function initApp() {
   fuse = new Fuse(data, {
-    keys: columns.map((_,i) => i.toString()),
-    threshold: 0.3,
-    includeScore: false
+    keys: COLUMNS.map((_, i) => i.toString()),
+    threshold: 0.3
   });
+
   renderTable(data);
   calcTotal();
 }
 
+/* =============================== */
+/*   عرض الجدول                    */
+/* =============================== */
+
 function renderTable(records) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = "";
+
   records.forEach((row, idx) => {
     const tr = document.createElement("tr");
-    row.forEach((cell, i) => {
-      if (i >= 12) return;
+
+    for (let i = 0; i < 11; i++) {
       const td = document.createElement("td");
-      td.textContent = cell || "";
-      if (i === 9 || i === 11) td.className = "rent";
+      td.textContent = row[i] || "";
+      td.dataset.label = COLUMNS[i];
+      if (i === 9) td.className = "rent";
       if (i === 10) td.className = "arrears";
-      if (i >= columns.length) return;
-      td.dataset.label = columns[i] + ": ";
       tr.appendChild(td);
-    });
-    // Annual rent
-    const monthly = parseFloat(row[9]) || 0;
-    const annual = (monthly * 12).toFixed(2);
+    }
+
+    /* الأجرة السنوية */
+    const annual = ((parseFloat(row[9]) || 0) * 12).toFixed(2);
     const tdAnnual = document.createElement("td");
-    tdAnnual.className = "rent";
     tdAnnual.textContent = annual;
-    tdAnnual.dataset.label = "الأجرة السنوية: ";
+    tdAnnual.className = "rent";
     tr.appendChild(tdAnnual);
 
-    // Actions
+    /* إجراءات */
     const tdAct = document.createElement("td");
     tdAct.innerHTML = `
-      <button onclick="editRow(${idx})" style="background:#3b82f6;color:white;margin:0.2rem;padding:0.5rem 1rem;"><i class="fas fa-edit"></i></button>
-      <button onclick="deleteRow(${idx})" style="background:#dc2626;color:white;margin:0.2rem;padding:0.5rem 1rem;"><i class="fas fa-trash"></i></button>
+      <button onclick="editRow(${idx})" style="background:#3b82f6;color:white;"><i class="fas fa-edit"></i></button>
+      <button onclick="deleteRow(${idx})" style="background:#dc2626;color:white;"><i class="fas fa-trash"></i></button>
     `;
     tr.appendChild(tdAct);
+
     tbody.appendChild(tr);
   });
 }
 
+/* =============================== */
+/*   الحسابات                      */
+/* =============================== */
+
 function calcTotal() {
-  const total = data.reduce((sum, row) => sum + (parseFloat(row[9]) || 0) * 12, 0);
-  document.getElementById("totalRent").textContent = `إجمالي الإيجارات السنوية: ${total.toLocaleString('ar-EG')} جنيه مصري`;
+  const total = data.reduce((s, r) => s + (parseFloat(r[9]) || 0) * 12, 0);
+  totalRent.textContent = "إجمالي الإيجارات السنوية: " + total.toLocaleString("ar-EG") + " جنيه";
 }
 
-document.getElementById("search").addEventListener("input", (e) => {
-  const term = e.target.value;
-  if (!term) { renderTable(data); return; }
-  const results = fuse.search(term);
-  renderTable(results.map(r => r.item));
-});
+/* =============================== */
+/*   البحث                         */
+/* =============================== */
+
+search.oninput = () => {
+  const t = search.value.trim();
+  if (!t) return renderTable(data);
+  const results = fuse.search(t).map(r => r.item);
+  renderTable(results);
+};
+
+/* =============================== */
+/*   المودال                       */
+/* =============================== */
 
 function openModal() {
-  document.getElementById("modal").style.display = "flex";
-  document.getElementById("modalTitle").textContent = "إضافة مستأجر جديد";
-  document.getElementById("dataForm").reset();
-  document.getElementById("editIndex").value = "";
+  modal.style.display = "flex";
+  modalTitle.textContent = "إضافة مستأجر";
+  dataForm.reset();
+  editIndex.value = "";
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display = "none";
 }
 
-document.getElementById("dataForm").onsubmit = (e) => {
-  e.preventDefault();
-  const row = [];
-  for (let i = 1; i <= 11; i++) {
-    row.push(document.getElementById("col"+i).value.trim());
-  }
-  const monthly = parseFloat(row[9]) || 0;
-  row[11] = (monthly * 12).toFixed(2);
+/* =============================== */
+/*   حفظ البيانات                  */
+/* =============================== */
 
-  const idx = document.getElementById("editIndex").value;
-  if (idx === "") {
-    data.push(row);
-  } else {
-    data[idx] = row;
-  }
-  localStorage.setItem("waqfData", JSON.stringify(data));
+dataForm.onsubmit = e => {
+  e.preventDefault();
+
+  const row = [];
+  for (let i = 1; i <= 11; i++) row.push(document.getElementById("col" + i).value);
+
+  row[11] = ((parseFloat(row[9]) || 0) * 12).toFixed(2);
+
+  if (editIndex.value === "") data.push(row);
+  else data[editIndex.value] = row;
+
+  saveData();
+  renderTable(data);
   closeModal();
-  initApp();
 };
 
-function editRow(idx) {
-  const row = data[idx];
-  for (let i = 0; i < row.length; i++) {
-    const el = document.getElementById("col"+(i+1));
-    if (el) el.value = row[i] || "";
-  }
-  document.getElementById("editIndex").value = idx;
-  document.getElementById("modalTitle").textContent = "تعديل بيانات المستأجر";
+function editRow(i) {
+  const r = data[i];
+  COLUMNS.forEach((_, idx) => {
+    const f = document.getElementById("col" + (idx + 1));
+    if (f) f.value = r[idx] || "";
+  });
+
+  editIndex.value = i;
+  modalTitle.textContent = "تعديل مستأجر";
   openModal();
 }
 
-function deleteRow(idx) {
-  if (confirm("هل تريد حذف هذا السجل نهائيًا؟")) {
-    data.splice(idx, 1);
-    localStorage.setItem("waqfData", JSON.stringify(data));
-    initApp();
+function deleteRow(i) {
+  if (confirm("هل تريد الحذف؟")) {
+    data.splice(i, 1);
+    saveData();
+    renderTable(data);
   }
 }
 
+/* =============================== */
+/*   تصدير إكسل                    */
+/* =============================== */
+
 function exportToExcel() {
-  const exportData = data.map(row => {
-    const monthly = parseFloat(row[9]) || 0;
+  const exportData = data.map(r => {
     const obj = {};
-    columns.forEach((c,i) => obj[c] = row[i] || "");
-    obj["الأجرة السنوية"] = (monthly * 12).toFixed(2);
+    COLUMNS.forEach((c, i) => obj[c] = r[i] || "");
+    obj["الأجرة السنوية"] = ((parseFloat(r[9]) || 0) * 12).toFixed(2);
     return obj;
   });
 
   const ws = XLSX.utils.json_to_sheet(exportData);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "إيجارات الوقف");
-  XLSX.writeFile(wb, "وقف_فاطمة_هانم_البقلية_2025.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "الإيجارات");
+  XLSX.writeFile(wb, "إيجارات_الوقف.xlsx");
 }
 
-// Start
+/* =============================== */
 loadFromGitHub();
-window.onclick = (e) => { if (e.target === document.getElementById("modal")) closeModal(); };
+window.onclick = e => { if (e.target === modal) closeModal(); };
 </script>
 </body>
 </html>
